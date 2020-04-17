@@ -26,6 +26,14 @@ var (
 	okayToClose int32
 )
 
+func NotifyIcon() *walk.NotifyIcon {
+	return notifyIcon
+}
+
+func MainWindow() *walk.MainWindow {
+	return mainWindow
+}
+
 func nativeLoop(title string, width int, height int) {
 
 	var err error
