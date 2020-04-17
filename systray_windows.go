@@ -82,8 +82,10 @@ func nativeLoop(title string, width int, height int) {
 
 func quit() {
 	atomic.StoreInt32(&okayToClose, 1)
-	mainWindow.Close()
+	mainWindow.Synchronize(func() {
 	notifyIcon.Dispose()
+		mainWindow.Close()
+	})
 	systrayExit()
 }
 
