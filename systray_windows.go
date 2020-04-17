@@ -8,10 +8,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync/atomic"
 
-	"github.com/getlantern/appdir"
-	"github.com/getlantern/uuid"
 	"github.com/lxn/walk"
 )
 
@@ -28,17 +27,6 @@ var (
 )
 
 func nativeLoop(title string, width int, height int) {
-	if randomPath, uuidErr := uuid.NewRandom(); uuidErr != nil {
-		fail("Unable to generate guid for creating temp dir (this should never happen): %v", uuidErr)
-	} else {
-		tmpDir := filepath.Join(appdir.General("systray"), randomPath.String())
-		if dirErr := os.MkdirAll(tmpDir, 0755); dirErr != nil {
-			fail("Error creating temp dir: %s", dirErr)
-		} else {
-			walk.Resources.SetRootDirPath(tmpDir)
-			defer os.RemoveAll(tmpDir)
-		}
-	}
 
 	var err error
 	mainWindow, err = walk.NewMainWindow()
@@ -83,7 +71,7 @@ func nativeLoop(title string, width int, height int) {
 func quit() {
 	atomic.StoreInt32(&okayToClose, 1)
 	mainWindow.Synchronize(func() {
-	notifyIcon.Dispose()
+		notifyIcon.Dispose()
 		mainWindow.Close()
 	})
 	systrayExit()
@@ -92,24 +80,8 @@ func quit() {
 // SetIcon sets the systray icon.
 // iconBytes should be the content of .ico for windows and .ico/.jpg/.png
 // for other platforms.
-func SetIcon(iconBytes []byte) {
-	md5 := md5.Sum(iconBytes)
-	filename := fmt.Sprintf("%x.ico", md5)
-	iconpath := filepath.Join(walk.Resources.RootDirPath(), filename)
-	// First, try to find a previously loaded icon in walk cache
-	icon, err := walk.Resources.Icon(filename)
-	if err != nil {
-		// Cache miss, load the icon
-		err := ioutil.WriteFile(iconpath, iconBytes, 0644)
-		if err != nil {
-			fail("Unable to save icon to disk", err)
-		}
-		defer os.Remove(iconpath)
-		icon, err = walk.Resources.Icon(filename)
-		if err != nil {
-			fail("Unable to load icon", err)
-		}
-	}
+func SetIcon(idx int) {
+	icon, err := walk.Resources.Icon(strconv.Itoa(idx))
 	err = notifyIcon.SetIcon(icon)
 	if err != nil {
 		fail("Unable to set systray icon", err)
@@ -124,7 +96,7 @@ func SetIcon(iconBytes []byte) {
 // to a regular icon on other platforms.
 // templateIconBytes and iconBytes should be the content of .ico for windows and
 // .ico/.jpg/.png for other platforms.
-func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
+func SetTemplateIcon(templateIconBytes []byte, regularIconBytes int) {
 	SetIcon(regularIconBytes)
 }
 
