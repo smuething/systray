@@ -45,14 +45,14 @@ func nativeLoop(title string, width int, height int) {
 	if err != nil {
 		fail("Unable to create main window", err)
 	}
-	// mainWindow.Closing().Attach(func(canceled *bool, reason walk.CloseReason) {
-	// 	// don't close app unless we're actually finished
-	// 	actuallyClose := atomic.LoadInt32(&okayToClose) == 1
-	// 	*canceled = !actuallyClose
-	// 	if !actuallyClose {
-	// 		mainWindow.SetVisible(false)
-	// 	}
-	// })
+	mainWindow.Closing().Attach(func(canceled *bool, reason walk.CloseReason) {
+		// don't close app unless we're actually finished
+		actuallyClose := atomic.LoadInt32(&okayToClose) == 1
+		*canceled = !actuallyClose
+		if !actuallyClose {
+			mainWindow.SetVisible(false)
+		}
+	})
 	layout := walk.NewVBoxLayout()
 	if err := mainWindow.SetLayout(layout); err != nil {
 		fail("Unable to set main layout", err)
